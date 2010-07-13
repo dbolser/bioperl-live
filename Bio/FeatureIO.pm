@@ -280,23 +280,22 @@ sub new {
 
   } else {
 
-	my %param = @args;
+    my %param = @args;
 
-	@param{ map { lc $_ } keys %param } = values %param; # lowercase keys
-	my $format = $param{'-format'} ||
+    @param{ map { lc $_ } keys %param } = values %param; # lowercase keys
+    my $format = $param{'-format'} ||
       $class->_guess_format( $param{-file} || $ARGV[0] );
-	
-	if( ! $format ) {
+
+    if( ! $format ) {
       if ($param{-file}) {
         $format = $class->_guess_format($param{-file});
       } elsif ($param{-fh}) {
         $format = $class->_guess_format(undef);
       }
-	}
-	$format = "\L$format";	# normalize capitalization to lower case
-	return unless( $class->_load_format_module($format) );
-	return "Bio::FeatureIO::$format"->new(@args);
-
+    }
+    $format = "\L$format";	# normalize capitalization to lower case
+    return unless( $class->_load_format_module($format) );
+    return "Bio::FeatureIO::$format"->new(@args);
   }
 }
 
@@ -416,22 +415,23 @@ sub write_feature {
 =cut
 
 sub _load_format_module {
-    my ($self, $format) = @_;
-    my $class = ref($self) || $self;
-    my $module = $class."::$format";#"Bio::Feature::" . $format;
-    my $ok;
+  my ($self, $format) = @_;
+  my $class = ref($self) || $self;
+  my $module = $class."::$format";#"Bio::Feature::" . $format;
+  my $ok;
 
-    eval {
-	$ok = $self->_load_module($module);
-    };
-    if ( $@ ) {
+  eval {
+    $ok = $self->_load_module($module);
+  };
+  if ( $@ ) {
     print STDERR <<END;
 $self: $format cannot be found
 Exception $@
-For more information about the FeatureIO system please see the FeatureIO docs.
-This includes ways of checking for formats at compile time, not run time
+For more information about the FeatureIO system please see the
+FeatureIO docs.  This includes ways of checking for formats at compile
+time, not run time
 END
-  ;
+    ;
   }
   return $ok;
 }

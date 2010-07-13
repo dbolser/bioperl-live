@@ -84,7 +84,7 @@ use Bio::Annotation::DBLink;
 use Bio::Annotation::OntologyTerm;
 use Bio::Annotation::SimpleValue;
 use Bio::Annotation::Target;
-use Bio::FeatureIO;
+#use Bio::FeatureIO;
 use Bio::Ontology::OntologyStore;
 use Bio::OntologyIO;
 use Bio::SeqFeature::Annotated;

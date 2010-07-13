@@ -44,7 +44,7 @@ GetOptions(
 Usage: $0 [options] gff_file1 gff_file2...
   Options:
           -d --dsn        The database name ($DSN)
-          -n --namespace  The table prefix, excluding ($NAMESPACE)
+          -n --namespace  The table prefix, excluding '_' ($NAMESPACE)
           -s --seqfeature The type of SeqFeature to create ($SFCLASS)
           -a --adaptor    The storage adaptor to use ($ADAPTOR)
           -v --verbose    Turn on verbose progress reporting
@@ -85,6 +85,15 @@ should only be used for subfeatures.
 Subfeature indexing is true by default. Set to false (0) to save lots
 of database space and speed performance. You may use --nosubfeatures
 to force this.  
+
+
+About DSN:
+
+Don't forget you can add several options to the DSN, for example:
+
+  --dsn dbi:mysql:database_name:host
+
+
 END
 
 if ($FAST) {
