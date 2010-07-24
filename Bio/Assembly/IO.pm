@@ -47,7 +47,7 @@ Bio::Assembly::IO is a handler module for formats in the Assembly::IO set
 
 User feedback is an integral part of the evolution of this and other
 Bioperl modules. Send your comments and suggestions preferably to the
-Bioperl mailing lists  Your participation is much appreciated.
+Bioperl mailing lists Your participation is much appreciated.
 
   bioperl-l@bioperl.org                  - General discussion
   http://bioperl.org/wiki/Mailing_lists  - About the mailing lists
@@ -58,10 +58,10 @@ Please direct usage questions or support issues to the mailing list:
 
 I<bioperl-l@bioperl.org>
 
-rather than to the module maintainer directly. Many experienced and 
-reponsive experts will be able look at the problem and quickly 
-address it. Please include a thorough description of the problem 
-with code and data examples if at all possible.
+rather than to the module maintainer directly. Many experienced and
+reponsive experts will be able look at the problem and quickly address
+it. Please include a thorough description of the problem with code and
+data examples if at all possible.
 
 =head2 Reporting Bugs
 
@@ -329,6 +329,7 @@ sub _guess_format {
    return 'maq'    if ($arg =~ /\.maq/i);
    return 'sam'    if ($arg =~ /\.[bs]am/i);
    return 'bowtie' if ($arg =~ /\.bowtie/i);
+   return 'agp'    if ($arg =~ /\.agp/i);
 
 }
 
@@ -362,8 +363,8 @@ sub DESTROY {
     $self->close();
 }
 
-# I need some direction on these!! The module works so I haven't fiddled with them!
-# Me neither! (rfsouza)
+# I need some direction on these!! The module works so I haven't
+# fiddled with them!  Me neither! (rfsouza)
 
 sub TIEHANDLE {
     my ($class,$val) = @_;

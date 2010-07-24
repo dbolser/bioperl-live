@@ -179,7 +179,7 @@ sub _handle_feature {
     $self->throw("Validation Error (line : $.): sorry (http://tinyurl.com/2wq26p5)")
       unless $object_beg <= $object_end;
 
-    $self->throw("Validation Error (line : $.): coordinate mismatch (http://tinyurl.com/2wq26p5)")
+    $self->throw("Validation Error (line : $.): coordinate mismatch, component length not equal to object length")
       unless ($component_end - $component_beg) == ($object_end - $object_beg);
 
 

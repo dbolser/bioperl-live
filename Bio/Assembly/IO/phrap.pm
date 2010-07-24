@@ -207,7 +207,7 @@ sub next_assembly {
 =head2 next_contig
 
  Title   : next_contig
- Usage   : $scaffold = $stream->next_contig()
+ Usage   : $contig = $stream->next_contig()
  Function: Returns the next contig or singlet in the PHRAP stream.
  Returns : a Bio::Assembly::Contig or Bio::Assembly::Single object
  Args    : none
