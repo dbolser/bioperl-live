@@ -62,10 +62,7 @@ is ($assembly->get_all_seq_ids, 23);
 is ($assembly->get_nof_seqs, 23);
 is ($assembly->get_contig_seq_ids, 23);
 is ($assembly->get_contig_ids, 23);
-
 is ($assembly->get_singlet_ids, 0);
-
-
 
 
 
@@ -81,18 +78,81 @@ foreach my $key ( $assembly_annot->get_all_annotation_keys() ) {
   }
 }
 
+
+
+# Look at a contig
+
+is ($assembly->get_contig_by_id( 'foo' ), undef );
+
+my $contig = $assembly->get_contig_by_id( 'EG1_scaffold1' );
+
+isa_ok($contig, 'Bio::Assembly::Contig');
+
+$contig = ($assembly->remove_contigs_by_id( 'EG1_scaffold1' ))[0];
+
+isa_ok($contig, 'Bio::Assembly::Contig');
+
+is ($assembly->get_nof_contigs, 22);
+is ($assembly->get_nof_contig_seqs, 22);
+is ($assembly->get_nof_singlets, 0);
+is ($assembly->get_all_seq_ids, 22);
+is ($assembly->get_nof_seqs, 22);
+is ($assembly->get_contig_seq_ids, 22);
+is ($assembly->get_contig_ids, 22);
+is ($assembly->get_singlet_ids, 0);
+
+
+## Look at the contig
+
+is ($contig->source, 'not specified');
+
+isa_ok($contig->assembly, 'Bio::Assembly::Scaffold');
+
+is ($contig->assembly->id, 'chrY');
+
+is($contig->strand, 0);
+
+print $contig->upstream_neighbor, "\n";
+print $contig->downstream_neighbor, "\n";
+
+
+# Look at contig features
+my $contig_features = $contig->get_features_collection;
+isa_ok($contig_features, 'Bio::SeqFeature::Collection');
+
+is ($contig_features->feature_count, 2);
+
+foreach my $feat ( $contig_features->get_all_features ) {
+  isa_ok($feat, 'Bio::SeqFeatureI');
+  
+  print
+    "Feature from ", $feat->start, " to ", $feat->end,
+      " Primary tag  ", $feat->primary_tag,
+	", produced by ", $feat->source_tag(), "\n";
+}
+
+
+
+
+
+
 __END__
-foreach my contig ( $assembly->_contig) {
+
+
+
+is ($assembly->all_contigs, 22);
+
+foreach my $contig ( $assembly->all_contigs) {
   isa_ok($contig, 'Bio::Assembly::Contig');
 }
 
 
-__END__
+
+
+
 
 
 ok $assembly = $aio->next_assembly, "get agp assy";
 is( $assembly->get_nof_contigs, 23, "got all contigs");
 
 
-ok(@contig_seq_ids = $assembly->get_contig_seq_ids, "get_contig_seq_ids");
-is(@contig_seq_ids, 334);
