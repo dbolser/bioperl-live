@@ -531,10 +531,10 @@ sub update_seq_list {
     return 1;
 }
 
-=head2 remove_contigs
+=head2 remove_contigs_by_id
 
-    Title   : remove_contigs
-    Usage   : $assembly->remove_contigs(1..4)
+    Title   : remove_contigs_by_id
+    Usage   : $assembly->remove_contigs( 'contigID1' [, 'contigID2'] )
     Function: Remove contig from assembly object
     Returns : an array of removed Bio::Assembly::Contig
               objects
@@ -544,18 +544,19 @@ sub update_seq_list {
 
 =cut
 
-sub remove_contigs {
+sub remove_contigs_by_id {
     my ($self, @args) = @_;
 
     my @ret = ();
     foreach my $contigID (@args) {
-        foreach my $seqID ($self->get_contig_by_id($contigID)->get_seq_ids()) {
+	my $contig = $self->get_contig_by_id( $contigID ) ||
+	    $self->throw("contig id '$contigID' is not found in this scaffold");
+        foreach my $seqID ($contig->get_seq_ids()) {
             delete $self->{'_seqs'}{$seqID};
         }
         push(@ret, $self->{'_contigs'}{$contigID});
         delete $self->{'_contigs'}{$contigID};
     }
-
     return @ret;
 }
 
