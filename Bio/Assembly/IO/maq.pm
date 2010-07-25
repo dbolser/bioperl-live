@@ -319,6 +319,7 @@ sub _store_contig {
         -start => 1,
     );
     $contigobj->set_consensus_sequence($consensus_seq);
+
     my $consensus_qual = Bio::Seq::PrimaryQual->new(
         -id    => $$contiginfo{'asmbl_id'},
         -qual  => $$contiginfo{'qualobj'}->qual,

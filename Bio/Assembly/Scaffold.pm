@@ -10,8 +10,8 @@
 
 =head1 NAME
 
-Bio::Assembly::Scaffold - Perl module to hold and manipulate sequence assembly
-data.
+Bio::Assembly::Scaffold - Perl module to hold and manipulate sequence
+assembly data.
 
 =head1 SYNOPSIS
 # 
@@ -204,12 +204,12 @@ sub get_nof_contigs {
 sub get_nof_contig_seqs {
     my $self = shift;
 
-    my $nof_seqs = 0;
+    my $nof_contig_seqs = 0;
     foreach my $contig ($self->all_contigs) {
-        $nof_seqs += scalar( $contig->get_seq_ids() );
+        $nof_contig_seqs += scalar( $contig->get_seq_ids() );
     }
 
-    return $nof_seqs;
+    return $nof_contig_seqs;
 }
 # function alias for backward compatibility
 *get_nof_sequences_in_contigs = \&get_nof_contig_seqs;
@@ -649,17 +649,17 @@ sub select_contigs {
 =cut
 
 sub select_singlets {
-    my ($self,@args) = @_;
-
+    my ($self, @args) = @_;
+    
     my @singlets = ();
     foreach my $singlet (@args) {
-    unless (exists $self->{'_singlets'}{$singlet}) {
-        $self->warn("$singlet singlet not found. Ignoring...");
-        next;
+	unless (exists $self->{'_singlets'}{$singlet}) {
+	    $self->warn("$singlet singlet not found. Ignoring...");
+	    next;
+	}
+	push(@singlets, $self->{'_singlets'}{$singlet});
     }
-    push(@singlets, $self->{'_singlets'}{$singlet});
-    }
-
+    
     return @singlets;
 }
 
@@ -682,6 +682,9 @@ sub all_contigs {
     my ($self) = @_;
 
     my @contigs = ();
+
+    # Why are contigs sorted here? Seems like an unnecessary
+    # performance hit.
     foreach my $contig (sort { $a cmp $b } keys %{ $self->{'_contigs'} }) {
         push(@contigs, $self->{'_contigs'}{$contig});
     }
@@ -696,8 +699,8 @@ sub all_contigs {
     Function: 
 
               Returns a list of all singlets in this assembly.
-          Singlets are isolated reads, without non-vector
-          matches to any other read in the assembly.
+              Singlets are isolated reads, without non-vector matches
+              to any other read in the assembly.
 
     Returns : array of Bio::Assembly::Singlet objects (in lexical order by id)
     Args    : none
