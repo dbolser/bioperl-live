@@ -66,7 +66,6 @@ is ($assembly->get_contig_ids, 23);
 is ($assembly->get_singlet_ids, 0);
 
 
-my $contig
 
 
 
