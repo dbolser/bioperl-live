@@ -94,28 +94,19 @@ use Bio::Assembly::Scaffold;
 
 use Bio::Assembly::Contig;
 
-use Bio::SeqFeature::Generic;
+use Bio::SeqFeature::Annotated;
+
+use Bio::Annotation::OntologyTerm;
 
 use base qw(Bio::Assembly::IO);
 
 
 
-my $progname = 'agp';
+# The AGP format doesn't specify the assembly program used to generate
+# the assembly. It is a general assembly format, not tied to one
+# particular program. Therefore, I don't know what to do here
 
-# sub new {
-#     my $class = shift;
-#     my @args = @_;
-#     my $self = $class->SUPER::new(@args);
-    
-#     ## Keeping this in case we need it
-#     my ($file) = $self->_rearrange([qw(FILE)], @args);
-    
-#     $self->file($file);
-    
-#     $self->_init_agp() or croak( "AGP initialization failed" );
-#     $self->{_assigned} = {};
-#     return $self;
-# }
+my $progname = 'agp';
 
 
 
@@ -124,7 +115,7 @@ my $progname = 'agp';
 =head2 next_assembly
 
  Title   : next_assembly
- Usage   : $assembly = $asmio->next_assembly()
+ Usage   : $assembly = $aio->next_assembly()
  Function: returns the next 'assembly' from the agp-formatted object
  Returns : a Bio::Assembly::Scaffold object
  Args    : none
@@ -140,25 +131,35 @@ sub next_assembly {
 	new( -progname => $progname );
     
     # NB: An AGP can have more than one assembly! This seems to be in
-    # contrast to the ACE, PHRAP and SAM assembly formats.
-    
-    my $assembly_id;
+    # contrast to the ACE, PHRAP and SAM/BAM assembly formats.
     
     # Load contigs into the scaffold
-    while ( my $contig = $self->next_contig() ) {
-	# Check if we have changed assembly
-	if( $assembly_id && $assembly_id ne $contig->assembly->id ){
-	    # We just changed assembly!
+    while ( my $contig = $self->next_contig ){
+	
+  	# Check if we have changed assembly
+  	if( $assembly->id eq "NoName" ){ # Code looks fragile to me!
+ 	    $assembly->id( $self->{'_contig_assembly_id'} );
+ 	}
+	
+  	if( $assembly->id ne $self->{'_contig_assembly_id'} ){
+  	    # We just changed assembly! Backtrack one line, and go to
+  	    # the return statement.
 	    
-	    rewind;
-	    return $assembly;
-	}
+  	    $self->_pushback($_);
+ 	    last;
+  	}
+	
 	# Add contig to assembly
-	$assembly->add_contig($obj);
+	$assembly->add_contig($contig);
     }
     
-    # Collected the last contig
-    return $assembly;
+    # Collected the last contig or changed assembly
+    
+    # Did we actually get any contigs?
+    if($assembly->get_nof_contigs){
+	return $assembly;
+    }
+    return undef;
 }
 
 
@@ -176,167 +177,128 @@ sub next_assembly {
 sub next_contig {
     my $self = shift; # Package reference
     
-#     # ??
-#     $contigOBJ = Bio::Assembly::Contig->new( );
-#     $contigOBJ->id($contigID);
-#     $contigOBJ->strand($ori);
-    
-    
-
     # Looping over all agp file lines
     
     while ($_ = $self->_readline) {
 	chomp;
 	
-	# Be graceful about empty lines or comments, and make sure we
-	# return undef if the input is consumed
-	
+	# Be graceful about empty lines or comments
 	next if /^\s*$/; #skip blank lines
 	next if /^\#/;   #skip comments
 	
-	
-	my @column = split /\t/, $feature_string;
+	my @column = split/\t/;
 	
 	$self->throw("Validation Error (line : $.): unknown format")
-	  unless @column == 9;
+	    unless @column == 9 || @column == 8;
 	
 	if ($column[4] ne 'N' &&
 	    $column[4] ne 'U'){
-	  
-	  ## See the specification for the nomenclature used here!
-	  my($object, $object_beg, $object_end, $part_number, $component_type,
-	     $component_id, $component_beg, $component_end, $orientation) = @column;
-	  
-	  
-	  
-	  ## VALIDATION
-	  
-	  $self->throw("Validation Error (line : $.): sorry (http://tinyurl.com/2wq26p5)")
-	    unless $object_beg <= $object_end;
-	  
-	  $self->throw("Validation Error (line : $.): coordinate mismatch, component length not equal to object length")
-	    unless ($component_end - $component_beg) == ($object_end - $object_beg);
-	  
-	  # Types are controlled
-	  $self->throw("Validation Error (line : $.): invalid type")
-	    unless $component_type =~ /^(?:
-	      A|Active Finishing|
-	      D|Draft HTG|
-	      F|Finished HTG|
-	      G|Whole Genome Finishing|
-	      O|Other sequence|
-	      P|Pre Draft|
-	      W|WGS contig)$/x;
-	  
-	  # Check IDs are unique
-	  if ($self->{'allIDs'}->{$component_id}){
-	    $self->throw("Validation Error (line : $.): The ID $component_id is not unique");
-	  }
-	  $self->{'allIDs'}->{$component_id} = 1;
-	  
-	  # Orientation
-	  if(0){}
-	  elsif($orientation =~ /^(?:\+|plus)$/   ){$orientation = +1}
-	  elsif($orientation =~ /^(?:\-|minus)$/  ){$orientation = -1}
-	  elsif($orientation =~ /^(?:unknown|na)$/){$orientation = +1}
-	  elsif($orientation =~ /^(?:irrelevant)$/){$orientation =  0}
-	  else{
-	    $self->throw("Validation Error (line : $.): sorry to be such a dick")
-	  }
-	  
-	  
-	  # Loading contig information
-	  $contigOBJ = Bio::Assembly::Contig->
-	    new( -id      => $component_id,
-		 -verbose => $self->verbose,
-		 -source  => 'agp'
-	       );
+	    
+	    $self->throw("Validation Error (line : $.): unknown format")
+		unless @column == 9;
+	    
+	    ## See the specification for the nomenclature used here!
+	    my($object, $object_beg, $object_end, $part_number, $component_type,
+	       $component_id, $component_beg, $component_end, $orientation
+		)= @column;
+	    
+	    
+	    
+	    # VALIDATION
+	    
+	    $self->throw("Validation Error (line : $.): sorry (http://tinyurl.com/2wq26p5)")
+		unless $object_beg <= $object_end;
+	    
+	    $self->throw("Validation Error (line : $.): component length not equal to object length")
+		unless ($component_end - $component_beg) == ($object_end - $object_beg);
+	    
+	    # The 'component' types are controlled...
+	    $self->throw("Validation Error (line : $.): invalid component type")
+		unless $component_type =~ /^(?:
+	          A|Active Finishing|
+	          D|Draft HTG|
+	          F|Finished HTG|
+	          G|Whole Genome Finishing|
+	          O|Other sequence|
+	          P|Pre Draft|
+	          W|WGS contig)$/x;
+	    
+ 	    # Check IDs are unique
+ 	    if ($self->{'allIDs'}->{$component_id}){
+ 		$self->throw("Validation Error (line : $.): The ID $component_id is not unique");
+ 	    }
+ 	    $self->{'allIDs'}->{$component_id} = 1;
+	    
+	    # Orientation
+	    if($orientation eq 0){}
+	    elsif($orientation =~ /^(?:\+|plus)$/   ){$orientation = +1}
+	    elsif($orientation =~ /^(?:\-|minus)$/  ){$orientation = -1}
+	    elsif($orientation =~ /^(?:unknown|na)$/){$orientation =  0}
+	    elsif($orientation =~ /^(?:irrelevant)$/){$orientation =  0}
+	    else{
+		$self->throw("Validation Error (line : $.): sorry to be such a dick")
+	    }
+	    
+	    
+	    
+	    # CONSTRUCTION
+	    
+	    $self->{'_contig_assembly_id'} = $object;
+	    
+	    # Create the contig object
+	    my $contigOBJ = Bio::Assembly::Contig->
+		new( -id      => $component_id,
+		     -source  => 'not specified',
+		     -strand  => $orientation,
+		);
+	    
+	    # Create the 'main feature' for the contig object
+	    my $ftype = Bio::Annotation::OntologyTerm->
+		new( -name => $component_type );
+	    my $feat = Bio::SeqFeature::Annotated->
+		new( -primary => "_main_contig_feature:". $component_id,
+		     -start   => $object_beg,
+		     -end     => $object_end,
+		     -strand  => $orientation,
+		     -type    => $ftype,
+		     -tag     => { '_scaffold_id' => $object },
+		);
+	    
+	    # Add the feature to the contig object
+	    $contigOBJ->add_features([ $feat ], 1);
+	    
+	    # Create a single sequence feature for the contig.  Using
+	    # the code code given in Contig.pm. Not sure why we can't
+	    # just give the sequence it's location directly. Not sure
+	    # why I chose not to use singlets.
+ 	    my $seq = Bio::LocatableSeq->
+ 		new( -id  => $component_id,
+		     # This saves us 'unknown alphabet' warnings
+		     -alphabet => 'dna',
+		);
+ 	    my $pos = Bio::SeqFeature::Generic->
+ 		new( -start  => $component_beg,
+ 		     -end    => $component_end,
+ 		     -strand => $orientation,
+ 		);
+	    
+ 	    #$contigOBJ->add_seq($seq);
+ 	    $contigOBJ->set_seq_coord($pos, $seq);
+	    
+	    return $contigOBJ;
+	}
+	else{
+	    # Not handling gaps yet.
+	    next;
+	}
+    }
+}
 
-	  my $feat   = Bio::SeqFeature::Generic->
-	    new( -start   => $component_beg,
-		 -end     => $component_end,
-		 -primary => "_main_contig_feature:". $contigOBJ->id(),
-		 -tag     => { '_trimmed_length' => $trimmed_length }
-	       );
-	  
-	  $contigOBJ->add_features([ $feat ], 1);
-	  
-	  my $seq = Bio::LocatableSeq->
-	    new(
-		-start      => $start,
-		-end        => $end,
-		-nowarnonempty => 1,
-		-strand     => $orientation,
-		-id         => $component_id,
-		-primary_id => $component_id,
-		-alphabet   => 'dna'
-	       );
-	  
-
-
-  my $feat = Bio::SeqFeature::Annotated->new();
-
-
-
-
-    # Not sure what to do with part_number
-
-
-    my $fta = Bio::Annotation::OntologyTerm->
-      new( -name => $component_type );
-
-    ## BUILD FEATURE
-
-    $feat->seq_id($object);
-    $feat->source_tag('AGP');
-    $feat->start($object_beg);
-    $feat->end  ($object_end);
-
-    $feat->type($fta);
-
-
-    # Treat components as ID, Name *AND* Targets. (Can you tell?)
-
-    # Add ID / Name
-    my $a = Bio::Annotation::SimpleValue->
-      new( -value => $component_id );
-
-    $feat->add_Annotation('ID', $a);
-    $feat->add_Annotation('Name', $a);
-
-    ## Add Target
-    my $a_target = Bio::Annotation::Target->
-      new(
-	  -target_id => $component_id,
-	  -start     => $component_beg,
-	  -end       => $component_end,
-	 );
-
-    $feat->add_Annotation('Target', $a_target);
-
-
-    $feat->strand($orientation);
-  }
+1;
 
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+__END__
 
 
   else{
@@ -403,5 +365,3 @@ sub next_contig {
 
   return $feat;
 }
-
-1;
