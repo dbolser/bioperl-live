@@ -67,8 +67,8 @@ Bio::Assembly::Contig - Perl module to hold and manipulate
 
 A contig is as a set of sequences, locally aligned to each other, so
 that every sequence has overlapping regions with at least one sequence
-in the contig, such that a continuous of overlapping sequences is
-formed, allowing the deduction of a consensus sequence which may be
+in the contig, such that a continuous piece of overlapping sequences
+is formed, allowing the deduction of a consensus sequence which may be
 longer than any of the sequences from which it was deduced.
 
 In this documentation we refer to the overlapping sequences used to
@@ -79,11 +79,12 @@ implemented in this module, but its posssible to add a consensus
 sequence deduced by other means, e.g, by the assembly program used to
 build the alignment.
 
-All aligned sequences in a Bio::Assembly::Contig must be Bio::Assembly::Locatable
-objects and have a unique ID. The unique ID restriction is due to the
-nature of the module's internal data structures and is also a request
-of some assembly programs. If two sequences with the same ID are added
-to a contig, the first sequence added is replaced by the second one.
+All aligned sequences in a Bio::Assembly::Contig must be
+Bio::Assembly::Locatable objects and have a unique ID. The unique ID
+restriction is due to the nature of the module's internal data
+structures and is also a request of some assembly programs. If two
+sequences with the same ID are added to a contig, the first sequence
+added is replaced by the second one.
 
 =head2 Coordinate_systems
 
@@ -137,13 +138,13 @@ neighboring the input location.
 =head2 Feature_collection
 
 Bio::Assembly::Contig stores much information about a contig in a
-Bio::Assembly::SeqFeature::Collection object. Relevant information on the
-alignment is accessed by selecting features based on their primary
+Bio::Assembly::SeqFeature::Collection object. Relevant information on
+the alignment is accessed by selecting features based on their primary
 tags (e.g. all features which have a primary tag of the form
 '_aligned_coord:$seqID', where $seqID is an aligned sequence ID, are
 coordinates for sequences in the contig alignment) and, by using
-methods from Bio::Assembly::SeqFeature::Collection, it's possible to select
-features by overlap with other features.
+methods from Bio::Assembly::SeqFeature::Collection, it's possible to
+select features by overlap with other features.
 
 We suggest that you use the primary tags of features as identifiers
 for feature classes. By convention, features with primary tags
@@ -153,21 +154,22 @@ assembly object, e.g.  drivers from the Bio::Assembly::IO set.
 
 Features in the features collection may be associated with particular
 aligned sequences. To obtain this, you must attach the sequence to the
-feature, using attach() seq from Bio::Assembly::SeqFeatureI, before you add the
-feature to the feature collection. We also suggest to add the sequence
-id to the primary tag, so that is easy to select feature for a
-particular sequence.
+feature, using attach() seq from Bio::Assembly::SeqFeatureI, before
+you add the feature to the feature collection. We also suggest to add
+the sequence id to the primary tag, so that is easy to select feature
+for a particular sequence.
 
 There is only one feature class that some methods in
-Bio::Assembly::Contig expect to find in the feature collection: features
-with primary tags of the form '_aligned_coord:$seqID', where $seqID is
-the aligned sequence id (like returned by $seq-E<gt>id()). These features
-describe the position (in "gapped consensus" coordinates) of aligned
-sequences, and the method set_seq_coord() automatically changes a
-feature's primary tag to this form whenever the feature is added to
-the collection by this method. Only two methods in Bio::Assembly::Contig
-will not work unless there are features from this class:
-change_coord() and get_seq_coord().
+Bio::Assembly::Contig expect to find in the feature collection:
+features with primary tags of the form '_aligned_coord:$seqID', where
+$seqID is the aligned sequence id (like returned by
+$seq-E<gt>id()). These features describe the position (in "gapped
+consensus" coordinates) of aligned sequences, and the method
+set_seq_coord() automatically changes a feature's primary tag to this
+form whenever the feature is added to the collection by this
+method. Only two methods in Bio::Assembly::Contig will not work unless
+there are features from this class: change_coord() and
+get_seq_coord().
 
 Other feature classes will be automatically available only when
 Bio::Assembly::Contig objects are created by a specific module. Such
@@ -761,20 +763,18 @@ sub get_seq_coord {
 
  Returns   : Bio::SeqFeature::Generic for old coordinates or undef.
  Argument  :
-             $feat  : a Bio::SeqFeature::Generic object
-                      representing a location for the
-                      aligned sequence, in "gapped
-                      consensus" coordinates.
+             $feat : a Bio::SeqFeature::Generic object representing a
+                     location for the aligned sequence, in "gapped
+                     consensus" coordinates.
 
-             Note: the original feature primary tag will
-                   be lost.
+             Note : the original feature primary tag will be lost.
 
-             $seq   : a Bio::LocatableSeq object
+             $seq : a Bio::LocatableSeq object
 
 =cut
 
 sub set_seq_coord {
-    my ($self,$feat,$seq) = @_;
+    my ($self, $feat, $seq) = @_;
 
     if( !ref $seq || ! $seq->isa('Bio::LocatableSeq') ) {
         $self->throw("Unable to process non locatable sequences [".ref($seq)."]");
@@ -788,11 +788,13 @@ sub set_seq_coord {
     $self->throw("Sequence coordinates must have a start!")
         unless (defined $feat->start);
 
+
+    # something is wrong here!
     my $seqID = $seq->id() || $seq->display_id || $seq->primary_id;
     if (exists( $self->{'_elem'}{$seqID} ) &&
-    exists( $self->{'_elem'}{$seqID}{'_seq'} ) &&
-    defined( $self->{'_elem'}{$seqID}{'_seq'} ) &&
-    ($seq ne $self->{'_elem'}{$seqID}{'_seq'}) ) {
+	exists( $self->{'_elem'}{$seqID}{'_seq'} ) &&
+	defined( $self->{'_elem'}{$seqID}{'_seq'} ) &&
+	($seq ne $self->{'_elem'}{$seqID}{'_seq'}) ) {
         $self->warn("Replacing sequence $seqID\n");
         $self->remove_seq($self->{'_elem'}{$seqID}{'_seq'});
     }
@@ -1143,7 +1145,7 @@ sub add_seq {
     
     $alphabet = lc($alphabet) if defined $alphabet;
     
-    $self->warn("Adding non-nucleotidic sequence ".$seqID)
+    $self->warn("Unknown alphabet for sequence ".$seqID)
         if (!$alphabet || ($alphabet ne 'dna' && $alphabet ne 'rna'));
 
     # build the symbol list for this sequence,
