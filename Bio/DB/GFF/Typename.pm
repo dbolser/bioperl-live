@@ -47,16 +47,15 @@ my %OBJECT_CACHE;
 
 =cut
 
-sub new    {
+sub new {
   my $package = shift;
-  my ($method,$source) = @_;
+  my ($method, $source) = @_;
   $method ||= '';
   $source ||= '';
-  if ($source eq '' && $method =~ /^([\w-]+):([\w-]*)$/) {
-    $method = $1;
-    $source = $2;
+  if ($source eq '') {
+    ($method, $source) = split(/:/, $method, 2);
   }
-  return $OBJECT_CACHE{"$method:$source"} ||= bless [$method,$source],$package;
+  return $OBJECT_CACHE{"$method:$source"} ||= bless [$method, $source], $package;
 }
 
 =head2 method
