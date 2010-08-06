@@ -845,11 +845,10 @@ sub _features {
 
   if (defined($types)) {
     # last argument is the name of the features table
-    my ($from,$where,$group,@a) = $self->_types_sql($types,'f');
-    push @from,$from   if $from;
-    push @where,$where if $where;
-    push @group,$group if $group;
-    push @args,@a;
+    my ($from, $where, undef, @a) = $self->_types_sql($types,'f');
+    push @from, $from   if $from;
+    push @where, $where if $where;
+    push @args, @a;
   }
 
   if (defined $attributes) {
@@ -1036,47 +1035,46 @@ sub subfeature_locations_are_indexed { 1 }
 
 sub _types_sql {
   my $self  = shift;
-  my ($types,$type_table) = @_;
-  my ($primary_tag,$source_tag);
+  my ($types, $type_table) = @_;
+  my ($primary_tag, $source_tag);
 
   my @types = ref $types eq 'ARRAY' ?  @$types : $types;
 
-  my $typelist      = $self->_typelist_table;
+  my $typelist = $self->_typelist_table;
   my $from = "$typelist AS tl";
 
-  my (@matches,@args);
+  my (@matches, @args);
 
   for my $type (@types) {
-
     if (ref $type && $type->isa('Bio::DB::GFF::Typename')) {
       $primary_tag = $type->method;
       $source_tag  = $type->source;
     } else {
-      ($primary_tag,$source_tag) = split ':',$type,2;
+      ($primary_tag, $source_tag) = split(/:/, $type, 2);
     }
 
-    if (defined $source_tag) {
+    if (defined $source_tag && $source_tag ne '') {
       if (length($primary_tag)) {
-        push @matches,"tl.tag=?";
-        push @args,"$primary_tag:$source_tag";
+        push @matches, "tl.tag = ?";
+        push @args, "$primary_tag:$source_tag";
       }
       else {
-        push @matches,"tl.tag LIKE ?";
-        push @args,"%:$source_tag";
+        push @matches, "tl.tag LIKE ?";
+        push @args, "%:$source_tag";
       }
     } else {
-      push @matches,"tl.tag LIKE ?";
-      push @args,"$primary_tag:%";
+      push @matches, "tl.tag LIKE ?";
+      push @args, "$primary_tag:%";
     }
   }
-  my $matches = join ' OR ',@matches;
+  my $matches = join ' OR ', @matches;
 
   my $where = <<END;
-   tl.id=$type_table.typeid
-   AND   ($matches)
+   tl.id = $type_table.typeid
+   AND     ($matches)
 END
 
-  return ($from,$where,'',@args);
+  return ($from, $where, '', @args);
 }
 
 sub _location_sql {
@@ -1423,24 +1421,25 @@ END
 =cut
 
 sub types {
-    my $self = shift;
-    eval "require Bio::DB::GFF::Typename" 
-	unless Bio::DB::GFF::Typename->can('new');
-    my $typelist      = $self->_typelist_table;
-    my $sql = <<END;
+  my $self = shift;
+  eval "require Bio::DB::GFF::Typename"
+    unless Bio::DB::GFF::Typename->can('new');
+  my $typelist = $self->_typelist_table;
+  my $sql = <<END;
 SELECT tag from $typelist
 END
 ;
-    $self->_print_query($sql) if DEBUG || $self->debug;
-    my $sth = $self->_prepare($sql);
-    $sth->execute() or $self->throw($sth->errstr);
 
-    my @results;
-    while (my($tag) = $sth->fetchrow_array) {
-	push @results,Bio::DB::GFF::Typename->new($tag);
-    }
-    $sth->finish;
-    return @results;
+  $self->_print_query($sql) if DEBUG || $self->debug;
+  my $sth = $self->_prepare($sql);
+  $sth->execute() or $self->throw($sth->errstr);
+
+  my @results;
+  while (my($tag) = $sth->fetchrow_array) {
+    push @results, Bio::DB::GFF::Typename->new($tag);
+  }
+  $sth->finish;
+  return @results;
 }
 
 =head2 toplevel_types
@@ -1956,7 +1955,7 @@ sub coverage_array {
     my @sum_bin_array = map {int(($_-1)/SUMMARY_BIN_SIZE)} @his_bin_array;
 
     my $interval_stats    = $self->_interval_stats_table;
-    
+
     # pick up the type ids
     my ($from,$where,$group,@a) = $self->_types_sql($types,'b');
     $where =~ s/.+AND//s;
