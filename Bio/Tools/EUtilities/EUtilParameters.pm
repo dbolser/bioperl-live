@@ -1,4 +1,3 @@
-# $Id: EUtilParameters.pm 15052 2008-12-01 08:47:39Z heikki $
 #
 # BioPerl module for Bio::Tools::EUtilities::EUtilParameters
 #
@@ -457,8 +456,9 @@ sub get_parameters {
                     }
                 }
             } else {
+                # add a check for undef
                 push @p, ref $id eq 'ARRAY' ?
-                ($param => join(',', @{ $id })):
+                ($param => join(',', grep {defined($_)} @{ $id })):
                 ($param => $id);
             }
         }
