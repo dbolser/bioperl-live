@@ -330,7 +330,7 @@ ones:
 
  -namespace         A string that will be used to qualify each table,
                     thereby allowing you to store several independent
-                    sequence feature databases in a single Mysql
+                    sequence feature databases in a single MySQL
                     database.
 
  -dumpdir           The path to a temporary directory that will be

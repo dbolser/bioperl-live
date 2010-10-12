@@ -83,7 +83,7 @@ use strict;
 use base qw(Bio::Location::Split Bio::Coordinate::ResultI);
 
 
-=head2 add_location
+=head2 add_sub_Location
 
  Title   : add_sub_Location
  Usage   : $obj->add_sub_Location($variant)
