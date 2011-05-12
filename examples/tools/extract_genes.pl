@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-# $Id$
+#!/usr/bin/perl
 =pod
 
 =head1 NAME

@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for Bio::Root::Test
 #
@@ -104,7 +103,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 of the bugs and their resolution. Bug reports can be submitted via
 the web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Sendu Bala
 
@@ -382,7 +381,7 @@ sub test_input_file {
 sub test_network {
     require Module::Build;
     my $build = Module::Build->current();
-    return $build->notes('network');
+    return $build->notes('Network Tests');
 }
 
 =head2 test_email

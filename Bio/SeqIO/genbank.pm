@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for Bio::SeqIO::genbank
 #
@@ -87,7 +86,7 @@ stores this information.
 
 Items listed as Annotation 'NAME' tell you the data is stored the
 associated Bio::AnnotationCollectionI object which is associated with
-Bio::Seq objects.  If it is explictly requested that no annotations
+Bio::Seq objects.  If it is explicitly requested that no annotations
 should be stored when parsing a record of course they will not be
 available when you try and get them.  If you are having this problem
 look at the type of SeqBuilder that is being used to contruct your
@@ -147,7 +146,7 @@ with code and data examples if at all possible.
 Report bugs to the Bioperl bug tracking system to help us keep track
 the bugs and their resolution. Bug reports can be submitted via the web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Bioperl Project
 
@@ -215,10 +214,11 @@ our %DBSOURCE = map {$_ => 1} qw(
     PhotoList    Gramene    WormBase    WormPep    Genew    ZFIN
     PeroxiBase    MaizeDB    TAIR    DrugBank    REBASE    HPA
     swissprot    GenBank    GenPept    REFSEQ    embl    PDB    UniProtKB
-    DIP    PeptideAtlas    PRIDE    CYGD    HOGENOME    Gene3D Project);
+    DIP    PeptideAtlas    PRIDE    CYGD    HOGENOME    Gene3D
+    Project);
 
-our %VALID_MOLTYPE = map {$_ => 1} qw(NA DNA RNA tRNA rRNA 
-    mRNA  uRNA  ss-RNA  snRNA snoRNA PRT);
+our %VALID_MOLTYPE = map {$_ => 1} qw(NA DNA RNA tRNA rRNA cDNA cRNA ms-DNA
+    mRNA  uRNA  ss-RNA  ss-DNA  snRNA snoRNA PRT);
 
 our %VALID_ALPHABET = (
     'bp' => 'dna',
@@ -311,7 +311,7 @@ sub next_seq {
     if ($params{'-molecule'} eq 'dna' || $params{'-molecule'} eq 'rna') {
         $params{'-molecule'} = uc $params{'-molecule'};
     }
-    $self->throw("Unrecognized molecule type:".$params{'-molecule'}) if
+    $self->debug("Unrecognized molecule type:".$params{'-molecule'}) if
         !exists($VALID_MOLTYPE{$params{'-molecule'}});
 	my $circ = shift(@tokens);
     if ($circ eq 'circular') {
@@ -587,7 +587,7 @@ sub next_seq {
                       -version => $version,
                       -database => $db || 'GenBank',
                       -tagname => 'dblink'));
-                } elsif ( $dbsource =~ /(\S+)([\.:])(\d+)/ ) {
+                } elsif ( $dbsource =~ /(\S+)([\.:])\s*(\d+)/ ) {
                     my ($id, $db, $version);
                     if ($2 eq ':') {
                         ($db, $id) = ($1, $3);
@@ -1406,8 +1406,6 @@ sub _read_GenBank_Species {
     if ($species && $species =~ /(.+)\s+((?:subsp\.|var\.).+)/) {
         ($species, $sub_species) = ($1, $2);
     }
-
-    $self->debug("$species\n");
 
     # Don't make a species object if it's empty or "Unknown" or "None"
     # return unless $genus and  $genus !~ /^(Unknown|None)$/oi;

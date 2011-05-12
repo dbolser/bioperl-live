@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for Bio::Annotation::Reference
 #
@@ -411,7 +410,7 @@ sub pubmed {
  Usage   :
  Function: Overrides DBLink database to be hard coded to 'MEDLINE' (or 'PUBMED'
            if only pubmed id has been supplied), unless the database has been
-           set explicitely before.
+           set explicitly before.
  Example :
  Returns :
  Args    :

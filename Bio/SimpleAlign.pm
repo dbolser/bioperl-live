@@ -1,4 +1,3 @@
-# $Id$
 # BioPerl module for SimpleAlign
 #
 # Please direct questions and support issues to <bioperl-l@bioperl.org> 
@@ -113,7 +112,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 the bugs and their resolution. Bug reports can be submitted via the
 web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR
 
@@ -2017,7 +2016,7 @@ sub score {
  Usage     : $str = $ali->consensus_string($threshold_percent)
  Function  : Makes a strict consensus
  Returns   : Consensus string
- Argument  : Optional treshold ranging from 0 to 100.
+ Argument  : Optional threshold ranging from 0 to 100.
              The consensus residue has to appear at least threshold %
              of the sequences at a given location, otherwise a '?'
              character will be placed at that location.

@@ -1,4 +1,3 @@
-# $Id: EUtilParameters.pm 15052 2008-12-01 08:47:39Z heikki $
 #
 # BioPerl module for Bio::Tools::EUtilities::EUtilParameters
 #
@@ -89,7 +88,7 @@ Report bugs to the Bioperl bug tracking system to
 help us keep track the bugs and their resolution.
 Bug reports can be submitted via the web.
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR 
 
@@ -271,10 +270,7 @@ sub reset_parameters {
     my ($self, @args) = @_;
     # is there a better way of doing this?  probably, but this works...
     my ($retmode,$file) = $self->_rearrange([qw(RETMODE ID_FILE)],@args);
-    $self->_reset_from_carryover();
-    #for my $p (@PARAMS, qw(eutil correspondence history_cache request_cache)) {
-    #    undef $self->{"_$p"} if defined $self->{"_$p"};
-    #}
+    map { defined $self->{"_$_"} && undef $self->{"_$_"} } (@PARAMS, qw(eutil correspondence history_cache request_cache));
     $self->_set_from_args(\@args, -methods => [@PARAMS, qw(eutil correspondence history)]);
     $self->eutil() || $self->eutil('efetch');
     $self->set_default_retmode unless $retmode;
@@ -375,7 +371,7 @@ sub request_mode {
     
     if (scalar(@{$MODE{$eutil}{mode}}) > 1) { # allows both GET and POST
         my ($id, $term) = ($self->id || [], $self->term || '');
-        if (scalar(@$id) > 200 || CORE::length($term) > 300) {
+        if (ref $id eq 'ARRAY' && scalar(@$id) > 200 || CORE::length($term) > 300) {
             return 'POST'
         }
     }
@@ -460,8 +456,9 @@ sub get_parameters {
                     }
                 }
             } else {
+                # add a check for undef
                 push @p, ref $id eq 'ARRAY' ?
-                ($param => join(',', @{ $id })):
+                ($param => join(',', grep {defined($_)} @{ $id })):
                 ($param => $id);
             }
         }

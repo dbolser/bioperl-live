@@ -277,9 +277,10 @@ END
   name         text  not null,
   display_name int       default 0
 );
-  CREATE INDEX name_id ON name(id);
-  CREATE INDEX name_name ON name(name);
-  CREATE INDEX name_name_varchar_patt_ops_idx ON name USING BTREE (lower(name) varchar_pattern_ops);
+  CREATE INDEX name_id ON name( id );
+  CREATE INDEX name_name ON name( name );
+  CREATE INDEX name_lcname ON name( lower(name) );
+  CREATE INDEX name_lcname_varchar_patt_ops ON name USING BTREE (lower(name) varchar_pattern_ops);
 END
 
 	  attribute => <<END,
@@ -304,7 +305,7 @@ END
   id               int       not null,
   child            int       not null
 );
-  CREATE INDEX parent2child_id_child ON parent2child(id,child);
+  CREATE UNIQUE INDEX parent2child_id_child ON parent2child(id,child);
 END
 
 	  meta => <<END,
@@ -320,6 +321,16 @@ END
   sequence text,
   primary key(id,"offset")
 )
+END
+
+    interval_stats => <<END,
+(
+   typeid            int not null,
+   seqid             int not null,
+   bin               int not null,
+   cum_count         int not null
+ );
+ CREATE UNIQUE INDEX interval_stats_id ON interval_stats(typeid,seqid,bin);
 END
 	 };
 }
@@ -465,7 +476,7 @@ sub _add_SeqFeature {
   my $parent_id = (ref $parent ? $parent->primary_id : $parent) 
     or $self->throw("$parent should have a primary_id");
 
-  $dbh->begin_work or $self->throw($dbh->errstr);
+  $self->begin_work or $self->throw($dbh->errstr);
   eval {
     for my $child (@children) {
       my $child_id = ref $child ? $child->primary_id : $child;
@@ -478,10 +489,10 @@ sub _add_SeqFeature {
 
   if ($@) {
     warn "Transaction aborted because $@";
-    $dbh->rollback;
+    $self->rollback;
   }
   else {
-    $dbh->commit;
+    $self->commit;
   }
   $sth->finish;
   $count;
@@ -681,7 +692,7 @@ sub _types_sql {
       ($primary_tag,$source_tag) = split ':',$type,2;
     }
 
-    if (defined $source_tag) {
+    if ($source_tag) {
       push @matches,"lower(tl.tag)=lower(?)";
       push @args,"$primary_tag:$source_tag";
     } else {
@@ -916,5 +927,36 @@ sub _dump_store {
   }
   $count;
 }
+
+sub _enable_keys  { }  # nullop
+sub _disable_keys { }  # nullop
+
+sub _add_interval_stats_table {
+    my $self = shift;
+    my $tables          = $self->table_definitions;
+    my $interval_stats  = $self->_interval_stats_table;
+    ##check to see if it exists yet; if it does, just return because
+    ##there is a drop from in the next step
+    my $dbh = $self->dbh;
+    my @table_exists = $dbh->selectrow_array("SELECT * FROM pg_tables WHERE tablename
+ = '$interval_stats' AND schemaname = '".$self->namespace."'");
+    if (!scalar(@table_exists)) {
+        my $query = "CREATE TABLE $interval_stats $tables->{interval_stats}";
+        $dbh->do($query) or $self->throw($dbh->errstr);
+    }
+}    
+
+sub _fetch_indexed_features_sql {
+    my $self     = shift;
+    my $features = $self->_feature_table;
+    return <<END;
+SELECT typeid,seqid,start-1,"end"
+  FROM $features as f
+ WHERE f.indexed=1
+  ORDER BY typeid,seqid,start
+END
+}
+
+
 
 1;

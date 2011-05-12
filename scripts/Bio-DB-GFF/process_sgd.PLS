@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
-# $Id$
 # This script will convert from SGD format to GFF format
 # See http://db.yeastgenome.org/schema/Schema.html
 

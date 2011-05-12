@@ -1,8 +1,7 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 
 use lib '.';
 
-# $Id$
 use strict;
 use Bio::DB::GFF;
 use Getopt::Long;

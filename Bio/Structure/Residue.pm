@@ -1,4 +1,3 @@
-# $Id$
 #
 # bioperl module for Bio::Structure::Residue
 #
@@ -51,7 +50,7 @@ with code and data examples if at all possible.
 Report bugs to the Bioperl bug tracking system to help us keep track
 the bugs and their resolution.  Bug reports can be submitted via the web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Kris Boulez
 
@@ -117,7 +116,7 @@ sub new {
 
  Title   : atom 
  Usage   : 
- Function:  nothing usefull untill I get symbolic references to do what I want
+ Function:  nothing useful untill I get symbolic references to do what I want
  Returns : 
  Args    : 
 
@@ -134,7 +133,7 @@ sub atom {
 
  Title   : add_atom
  Usage   : 
- Function:  nothing usefull untill I get symbolic references to do what I want
+ Function:  nothing useful untill I get symbolic references to do what I want
  Returns : 
  Args    : 
 

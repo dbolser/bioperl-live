@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for Bio::Ontology::SimpleOntologyEngine
 #
@@ -61,7 +60,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 of the bugs and their resolution. Bug reports can be submitted via
 the web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Peter Dimitrov
 
@@ -230,7 +229,7 @@ sub add_term {
     my ( $self, $term ) = @_;
     my $term_store = $self->_term_store;
 
-    if ( defined $term_store->{ $term->identifier } ) {
+    if ( defined $term_store->{ $term->identifier } && $self->_instantiated_terms_store->{ $term->identifier }) {
         $self->throw( "term " . $term->identifier . " already defined\n" );
     } else {
         $term_store->{ $term->identifier } = $term;
@@ -402,15 +401,15 @@ sub _add_relationship_simple {
 
     if (     defined $store->{$parent_id}
          &&  defined $store->{$parent_id}->{$child_id}
-         && $store->{$parent_id}->{$child_id}->name != $rel->predicate_term->name
+         && $store->{$parent_id}->{$child_id}->name ne $rel->predicate_term->name
      ) {
         $self->throw( "relationship "
-                . Dumper( $rel->predicate_term )
+                . $rel->predicate_term->name
                 . " between "
                 . $parent_id . " and "
                 . $child_id
                 . " already defined as "
-                . Dumper( $store->{$parent_id}->{$child_id} )
+                . $store->{$parent_id}->{$child_id}->name
                 . "\n" );
     }
 

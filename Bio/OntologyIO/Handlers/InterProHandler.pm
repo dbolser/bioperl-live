@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for InterProHandler
 #
@@ -62,7 +61,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 of the bugs and their resolution. Bug reports can be submitted via the
 web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Peter Dimitrov
 
@@ -386,24 +385,39 @@ sub _names {
  Returns :
  Args    :
 
-
 =cut
+
+{
+    
+my %relationship_cache;
+
+sub _clear_cache { %relationship_cache = () }
 
 sub _create_relationship {
     my ( $self, $ref_id, $rel_type_term ) = @_;
+    
     my $ont       = $self->ontology();
     my $fact      = $self->term_factory();
     my $term_temp = ( $ont->engine->get_term_by_identifier($ref_id) )[0];
-
-    my $rel = Bio::Ontology::Relationship->new( -predicate_term => $rel_type_term );
-
+    
     if ( !defined $term_temp ) {
         $term_temp =
             $ont->engine->add_term(
             $fact->create_object( -InterPro_id => $ref_id, -name => $ref_id, -ontology => $ont ) );
         $ont->engine->mark_uninstantiated($term_temp);
     }
+    my $marshalled = join(':', (sort $self->_term->identifier, $ref_id));
+
+    # check cache to see if the two have been seen before, using marshalled IDs
+    if ($relationship_cache{$marshalled}++) {
+        # TODO: should check that the relationship type for these terms is the
+        # inverse of the stored relationship type
+        return;
+    }
+    
     my $rel_type_name = $self->_top( $self->_names );
+
+    my $rel = Bio::Ontology::Relationship->new( -predicate_term => $rel_type_term );
 
     if ( $rel_type_name eq 'parent_list' || $rel_type_name eq 'found_in' ) {
         $rel->object_term($term_temp);
@@ -414,6 +428,8 @@ sub _create_relationship {
     }
     $rel->ontology($ont);
     $ont->add_relationship($rel);
+}
+
 }
 
 =head2 start_element
@@ -488,17 +504,15 @@ sub start_element {
     } elsif ( $element->{Name} eq 'interpro' ) {
         my %record_args = %{ $element->{Attributes} };
         my $id          = $record_args{"id"};
-        my $term_temp   = ( $ont->engine->get_term_by_identifier($id) )[0];
 
-        $self->_term(
-            ( !defined $term_temp )
-            ? $ont->add_term( $fact->create_object( -InterPro_id => $id, -name => $id ) )
-            : $term_temp
-        );
+        # this sets the current term
+        my $term   = ( $ont->engine->get_term_by_identifier($id) )[0] || 
+            $fact->create_object( -InterPro_id => $id, -name => $id );
+        $self->_term($term);
 
-        $self->_term->ontology($ont);
-        $self->_term->short_name( $record_args{"short_name"} );
-        $self->_term->protein_count( $record_args{"protein_count"} );
+        $term->ontology($ont);
+        $term->short_name( $record_args{"short_name"} );
+        $term->protein_count( $record_args{"protein_count"} );
         $self->_increment_record_count();
         $self->_stack( [ { interpro => undef } ] );
         $self->_names( ["interpro"] );
@@ -515,6 +529,7 @@ sub start_element {
         $rel->subject_term( $self->_term );
         $rel->ontology($ont);
         $ont->add_relationship($rel);
+        $ont->add_term($term);
     } elsif ( defined $self->_stack ) {
         my %hash = ();
 
@@ -607,6 +622,7 @@ sub end_element {
     if ( $element->{Name} eq 'interprodb' ) {
         $self->debug(
             "Interpro DB Parser Finished: $record_count read, $processed_count processed\n");
+        $self->_clear_cache();
     } elsif ( $element->{Name} eq 'interpro' ) {
         $self->_clear_term;
         $self->_increment_processed_count();
@@ -632,12 +648,15 @@ sub end_element {
                 foreach my $pub_record ( @{ $current_hash->{publication} } ) {
                     my $ref = Bio::Annotation::Reference->new;
                     my $loc = $pub_record->{location}->[0];
-
-                    $ref->location( $pub_record->{journal}->[0]->{accumulated_text_12345} . ", "
-                            . $loc->{firstpage} . "-"
-                            . $loc->{lastpage} . ", "
-                            . $loc->{volume} . ", "
-                            . $pub_record->{year}->[0]->{accumulated_text_12345} );
+                    # TODO: Getting unset stuff here; should this be an error?
+                    $ref->location(
+                        sprintf("%s, %s-%s, %s, %s",
+                        $pub_record->{journal}->[0]->{accumulated_text_12345} || '',
+                        $loc->{firstpage} || '',
+                        $loc->{lastpage}  || '',
+                        $loc->{volume}    || '',
+                        $pub_record->{year}->[0]->{accumulated_text_12345} || '')
+                    );
                     $ref->title( $pub_record->{title}->[0]->{accumulated_text_12345} );
                     my $ttt = $pub_record->{author_list}->[0];
 
@@ -662,7 +681,8 @@ sub end_element {
                         -primary_id => $db_xref->{dbkey}
                         );
                 }
-                $self->_term->add_member(@refs);
+                $self->_term->add_dbxref(-dbxrefs => \@refs,
+                                          -context => 'member_list');
             } elsif ( $element->{Name} eq 'sec_list' ) {
                 my @refs = ();
 
@@ -674,7 +694,7 @@ sub end_element {
             } elsif ( $element->{Name} eq 'example_list' ) {
                 my @refs = ();
 
-                foreach my $example ( @{ $current_hash->{example} } ) {
+                foreach my $example ( @{ $current_hash->{examples} } ) {
                     push @refs,
                         Bio::Annotation::DBLink->new(
                         -database   => $example->{db_xref}->[0]->{db},
@@ -682,7 +702,8 @@ sub end_element {
                         -comment    => $example->{comment}
                         );
                 }
-                $self->_term->add_example(@refs);
+                $self->_term->add_dbxref(-dbxrefs => \@refs,
+                                         -context => 'example_list');
             } elsif ( $element->{Name} eq 'external_doc_list' ) {
                 my @refs = ();
 
@@ -693,7 +714,8 @@ sub end_element {
                         -primary_id => $db_xref->{dbkey}
                         );
                 }
-                $self->_term->add_external_document(@refs);
+                $self->_term->add_dbxref(-dbxrefs => \@refs,
+                                         -context => 'external_doc_list');
             } elsif ( $element->{Name} eq 'class_list' ) {
                 my @refs = ();
 
@@ -704,7 +726,8 @@ sub end_element {
                         -primary_id => $classification->{id}
                         );
                 }
-                $self->_term->class_list( \@refs );
+                $self->_term->add_dbxref(-dbxrefs => \@refs,
+                                        -context => 'class_list');
             } elsif ( $element->{Name} eq 'deleted_entries' ) {
                 my @refs = ();
 
@@ -773,8 +796,9 @@ sub _increment_record_count {
 =cut
 
 sub _increment_processed_count {
+    my $self = shift;
     $processed_count++;
-    print STDERR $processed_count . "\n" if $processed_count % 100 == 0;
+    $self->debug("$processed_count\n") if $processed_count % 100 == 0;
 }
 
 1;

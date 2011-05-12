@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 # Author: Jason Stajich, jason@bioperl.org
-# $Id$
 # $Revision: 6576 $
 
 use strict;

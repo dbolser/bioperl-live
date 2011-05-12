@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-# $Id$
+#!/usr/bin/perl
 # prosite2perl -- convert Prosite patterns to Perl regular expressions
 #
 # Jordan Dimov (jdimov@cis.clarion.edu)

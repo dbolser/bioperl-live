@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-# $Id$
+#!/usr/bin/perl
 =head1 NAME
 
 biblio-soap-example.pl

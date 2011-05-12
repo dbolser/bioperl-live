@@ -1,4 +1,3 @@
-# $Id$
 #
 # BioPerl module for Bio::ClusterI
 #
@@ -60,7 +59,7 @@ Report bugs to the Bioperl bug tracking system to help us keep track
 of the bugs and their resolution. Bug reports can be submitted via the
 web:
 
-  http://bugzilla.open-bio.org/
+  https://redmine.open-bio.org/projects/bioperl/
 
 =head1 AUTHOR - Shawn Hoon
 
@@ -89,7 +88,7 @@ define.
 
 =head2 new
 
-  We dont mandate but encourage implementors to support at least the
+  We don't mandate but encourage implementors to support at least the
   following named parameters upon object initialization.
 
   Argument        Description

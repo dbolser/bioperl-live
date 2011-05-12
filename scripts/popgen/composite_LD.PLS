@@ -1,6 +1,5 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl
 # -*-Perl-*- 
-# $Id$
 
 =head1 NAME 
 

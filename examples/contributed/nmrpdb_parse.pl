@@ -1,5 +1,4 @@
-#!/usr/bin/perl -w
-# $Id$
+#!/usr/bin/perl
 use strict;
 
 # This program will read in an NMR derived PDB file containing
