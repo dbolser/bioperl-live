@@ -408,7 +408,6 @@ L<Bio::DB::SeqFeature::Segment>,
 L<Bio::DB::SeqFeature::NormalizedFeature>,
 L<Bio::DB::SeqFeature::GFF3Loader>,
 L<Bio::DB::SeqFeature::Store::DBI::mysql>,
-L<Bio::DB::SeqFeature::Store::bdb>
 
 =head1 AUTHOR
 
